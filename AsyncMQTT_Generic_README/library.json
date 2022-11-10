@@ -1,0 +1,44 @@
+{
+  "name": "AsyncMQTT_Generic",
+  "version": "1.5.0",
+  "keywords": "communication, iot, automation, async, async-tcp, async-tcp-ssl, async-mqtt, mqtt, async-mqtt-client, esp8266, esp32, stm32, portenta-h7, wt32-eth01, tls, teensy-41, qn-ethernet, lwip, lan8742a, lan8720",
+  "description": "Arduino Library for ESP8266, ESP32, Portenta_H7 and STM32 asynchronous MQTT client implementation. This library, ported to support ESP32, WT32_ETH01 (ESP32 + LAN8720), ESP8266, Portenta_H7 (Ethernet or WiFi) and STM32 (LAN8742A or LAN8720 Ethernet), Teensy 4.1 using QNEthernet. Currently supporting TLS/SSL for ESP32 only",
+  "authors": 
+  [
+    {
+      "name": "Marvin ROGER",
+    	"url": "https://www.marvinroger.fr"
+    },
+    {
+      "name":  "Khoi Hoang",
+      "url":   "https://github.com/khoih-prog",
+      "email": "khoih.prog@gmail.com",
+      "maintainer": true
+    }  
+  ],
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/khoih-prog/AsyncMQTT_Generic.git"
+  },
+  "dependencies": 
+  [
+    {
+      "owner": "me-no-dev",
+      "name": "ESPAsyncTCP",
+      "version": ">=1.2.2",
+      "platforms": "espressif8266"
+    },
+    {
+      "owner": "khoih-prog",
+      "name": "ESPAsync_WiFiManager",
+      "version": ">=1.12.2",
+      "platforms": ["espressif32", "espressif8266"]
+    }
+  ],
+  "license": "MIT",
+  "frameworks": "*",
+  "platforms": ["espressif8266", "espressif32"],
+  "examples": "examples/*/*/*.ino",
+  "headers": ["AsyncMQTT_Generic.h"]
+}
