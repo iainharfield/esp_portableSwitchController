@@ -836,7 +836,7 @@ public:
 		printTelnet((String)logString);
 		sprintf(logString, "%s%s\r", "WE Run Mode:\t", rmWE.c_str());
 		printTelnet((String)logString);
-		sprintf(logString, "%s%s%i%s%i%s%i%s%i\r", "Cntrl config:\t", "WDT:", getWECntrlTimesReceived(), " WET:", getWECntrlTimesReceived(), " WDC:", getWDCommandReceived(), " WEC:", getWECommandReceived());
+		sprintf(logString, "%s%s%i%s%i%s%i%s%i\r", "Cntrl config:\t", "WDT:", getWDCntrlTimesReceived(), " WET:", getWECntrlTimesReceived(), " WDC:", getWDCommandReceived(), " WEC:", getWECommandReceived());
 		printTelnet((String)logString);
 		sprintf(logString, "%s%s\r", "WD CT Topic:\t", getWDCntrlTimesTopic().c_str());
 		printTelnet((String)logString);
@@ -844,7 +844,7 @@ public:
 		printTelnet((String)logString);
 		sprintf(logString, "%s%s\r", "WD Cmd Topic:\t", getWDUIcommandStateTopic().c_str());
 		printTelnet((String)logString);
-		sprintf(logString, "%s%s\r", "WE Cmd Topic:\t", getWDUIcommandStateTopic().c_str());
+		sprintf(logString, "%s%s\r", "WE Cmd Topic:\t", getWEUIcommandStateTopic().c_str());
 		printTelnet((String)logString);
 	}
 };
