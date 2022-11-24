@@ -480,7 +480,7 @@ public:
 		else if (strcmp(mqttMessage, "SET") == 0)
 		{
 
-			mqttLog("processOLFCntrlMessage: SET received.", true, true);
+			mqttLog("processCntrlMessage: SET received.", true, true);
 
 			// IF pressed SET then check the ON Close time and sent the appropriate message
 			if (coreServices.getWeekDayState() == true)
@@ -537,7 +537,7 @@ public:
 
 		// char logString[MAX_LOGSTRING_LENGTH];
 		//  debugPrint();
-		mqttLog("processOLFCntrlMessage: onORoff checking", true, true);
+		//mqttLog("processCntrlMessage: onORoff checking", true, true);
 
 		if (coreServices.getWeekDayState() == true)
 			setWDZone(ZONEGAP); // not in a zone
@@ -617,7 +617,7 @@ public:
 	{
 
 		// Check all WD and WE times have been received before doing anything
-		mqttLog("OLF Contoller Processing TOD", true, true);
+		mqttLog("PSC Contoller Processing TOD", true, true);
 
 		char logString[MAX_LOGSTRING_LENGTH];
 
