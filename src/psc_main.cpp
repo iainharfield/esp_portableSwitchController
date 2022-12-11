@@ -32,12 +32,12 @@ void telnet_extension_2(char);
 void telnet_extensionHelp(char);
 void startTimesReceivedChecker(); 
 void processCntrlTOD_Ext();
-void app_WD_on(String);
-void app_WE_off(String);
-void app_WD_on(String);
-void app_WE_off(String);
-void app_WD_auto(String);
-void app_WE_auto(String);
+// void app_WD_on(void *);
+// void app_WE_off(cntrlState &);
+// void app_WD_on(cntrlState &);
+// void app_WE_off(cntrlState &);
+// void app_WD_auto(cntrlState &);
+// void app_WE_auto(cntrlState &);
 
 //*************************************
 // defined in asyncConnect.cpp
@@ -80,9 +80,9 @@ extern bool telnetReporting;
 
 String deviceName      	= "portable-switch";
 String deviceType      	= "CNTRL";
-String app_id			= "PSC";						// configure
+String app_id			= "PSC";	// configure
 
-int relay_pin = D1;					// wemos D1. LIght on or off (Garden lights)
+int relay_pin 		= D1;			// wemos D1. LIght on or off (Garden lights)
 int relay_pin_pir   = D2;	        // wemos D2. LIght on or off (Garage Path)
 int ManualStatus    = D3;           // Manual over ride.  If low then lights held on manually
 int LIGHTSON        = 1;
@@ -100,7 +100,6 @@ const char *oh3StateManual		= "/house/cntrl/portable-switch/manual-state";	 // 	
 //************************
 bool processCntrlMessageApp_Ext(char *, const char *, const char *, const char *);
 void processAppTOD_Ext();
-
 
 devConfig espDevice;
 //runState cntrlState;
@@ -131,13 +130,10 @@ void setup()
 
 	// this app is a contoller
 	// configure the MQTT topics for the Controller
-	controllerState.setCntrlName((String) app_id);
+	controllerState.setCntrlName((String) app_id + "PSC01");
 	controllerState.setRefreshID(RefreshID);
 
-
-	
-
-	//startCntrl();
+	controllerState.setCntrlObjRef(controllerState);
 
     // Platform setup: Set up and manage: WiFi, MQTT and Telnet
     platform_setup(configWiFi);
@@ -145,17 +141,13 @@ void setup()
     //***********************
     // Application setup
     //***********************
-   
     pinMode(relay_pin, OUTPUT);
 	pinMode(relay_pin_pir, OUTPUT);
 	pinMode(ManualStatus, INPUT);
 	digitalWrite(relay_pin, LIGHTSOFF);
 	digitalWrite(relay_pin_pir, LIGHTSOFF);
 
-    configurationTimesReceived.attach(30, startTimesReceivedChecker); 
-
-
-	
+    configurationTimesReceived.attach(30, startTimesReceivedChecker); 	
 }
 
 void loop()
@@ -177,7 +169,7 @@ void loop()
 		        sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "PCS Manually Held ON");
 		        mqttLog(logString, true, true);
 
-				app_WD_on(app_id);  // FIXTHIS WD or WE
+				app_WD_on(&controllerState);  // FIXTHIS WD or WE
                 mqttClient.publish(oh3StateManual, 1, true, "MAN");
 	}
 	else
@@ -200,22 +192,22 @@ void loop()
 bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessageProperties &properties, const size_t &len, const size_t &index, const size_t &total)
 {
     (void)payload;
-    //char logString[MAX_LOGSTRING_LENGTH];
 
     char mqtt_payload[len+1];
     mqtt_payload[len] = '\0';
     strncpy(mqtt_payload, payload, len);
 
-    //if (reporting == REPORT_DEBUG)
-	//{
+    if (reporting == REPORT_DEBUG)
+	{
         mqttLog(mqtt_payload, true, true);
-    //}
+    }
 
 	if (strcmp(topic, oh3CommandTrigger) == 0)
 	{
 		if (strcmp(mqtt_payload, "PIRON") == 0)
 		{
 			digitalWrite(relay_pin_pir, LIGHTSON);	
+			controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
             return true;
 		}
 
@@ -227,33 +219,23 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 				if (bManMode != true)
 					digitalWrite(relay_pin_pir, LIGHTSOFF);	
 			//}
+			controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
             return true;
 		}
-        /*else
-	    {
-			memset(logString, 0, sizeof logString);
-			sprintf(logString, "%s%s %s", "Unknown PIR Command received: ", topic, mqtt_payload);
-			mqttLog(logString, true, true);
-            return true;
-	    } */
     }    
-	/*else
-	{
-			memset(logString, 0, sizeof logString);
-			sprintf(logString, "%s%s %s", "Unknown Command received by App: ", topic, mqtt_payload);
-			mqttLog(logString, true, true);
-	}*/
+	controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
     return false;
 }
 
 void processAppTOD_Ext()
 {
-	mqttLog("PSC 01 Application Processing TOD", true, true);
+	mqttLog("PSC01 Application Processing TOD", true, true);
 
 }
 
 bool processCntrlMessageApp_Ext(char *mqttMessage, const char *onMessage, const char *offMessage, const char *commandTopic)
 {
+	
 	if (strcmp(mqttMessage, "SET") == 0)
 	{
 		mqttClient.publish(oh3StateManual,1, true, "AUTO");			// This just sets the UI to show that MAN start is OFF
@@ -279,34 +261,43 @@ void appMQTTTopicSubscribe()
 	controllerState.setWECntrlRunTimesStateTopic(runtimeState);
 }
 
-void app_WD_on(String cid)
+void app_WD_on(void *cid)
 {
 	digitalWrite(relay_pin, LIGHTSON);
 	
 }
 
-void app_WD_off(String cid)
+void app_WD_off(void  *cid)
 {
 	digitalWrite(relay_pin, LIGHTSOFF);
 }
 
-void app_WE_on(String cid)
+void app_WE_on(void *cid)
 {
 	digitalWrite(relay_pin, LIGHTSON);
 }
 
-void app_WE_off(String cid)
+void app_WE_off(void *cid)
 {
 	digitalWrite(relay_pin, LIGHTSOFF);	
 }
-void app_WD_auto(String cid)
+void app_WD_auto(void *cid)
 {
-
+	cntrlState *obj = (cntrlState *)cid;
+	String msg = obj->getCntrlName() + " WD AUTO";
+	mqttLog(msg.c_str(), true, true);
+							
+	//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
+	mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 1, true, "SET"); //
 }
 
-void app_WE_auto(String cid)
+void app_WE_auto(void  *cid)
 {
-	
+	cntrlState *obj = (cntrlState *)cid;
+	String msg = obj->getCntrlName() + " WE AUTO";
+	mqttLog(msg.c_str(), true, true);
+	//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
+	mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 1, true, "SET");
 }
 
 void startTimesReceivedChecker()
