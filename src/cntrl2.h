@@ -683,9 +683,9 @@ public:
 			else if (getWERunMode() == NEXTMODE && coreServices.getWeekDayState() == false)
 			{
 				onORoffstate = onORoff();
-				wezone = getWDZone();			
+				wezone = getWEZone();			
 
-				String logRecord = "SwitchBack: " + (String) getWDSwitchBack() + " Zone: " + (String) wezone + " onOroff: " + (String)onORoffstate;
+				String logRecord = "SwitchBack: " + (String) getWESwitchBack() + " Zone: " + (String) wezone + " onOroff: " + (String)onORoffstate;
 				mqttLog(logRecord.c_str(), true, true);
 
 				if ( onORoffstate == false)  // Heating ON based on schedule - not actual
@@ -881,6 +881,10 @@ public:
 		sprintf(logString, "%s%s\r", "WD Run Mode:\t", rmWD.c_str());
 		printTelnet((String)logString);
 		sprintf(logString, "%s%s\r", "WE Run Mode:\t", rmWE.c_str());
+		printTelnet((String)logString);
+		sprintf(logString, "%s%i\r", "WD SB Mode:\t", getWDSwitchBack());
+		printTelnet((String)logString);
+		sprintf(logString, "%s%i\r", "WE SB Mode:\t", getWESwitchBack());
 		printTelnet((String)logString);
 		sprintf(logString, "%s%s%i%s%i%s%i%s%i\r", "Cntrl config:\t", "WDT:", getWDCntrlTimesReceived(), " WET:", getWECntrlTimesReceived(), " WDC:", getWDCommandReceived(), " WEC:", getWECommandReceived());
 		printTelnet((String)logString);

@@ -130,7 +130,7 @@ void setup()
 
 	// this app is a contoller
 	// configure the MQTT topics for the Controller
-	controllerState.setCntrlName((String) app_id + "PSC01");
+	controllerState.setCntrlName((String) app_id + "01");
 	controllerState.setRefreshID(RefreshID);
 
 	controllerState.setCntrlObjRef(controllerState);
@@ -263,22 +263,37 @@ void appMQTTTopicSubscribe()
 
 void app_WD_on(void *cid)
 {
-	digitalWrite(relay_pin, LIGHTSON);
+    cntrlState *obj = (cntrlState *)cid;
+	String msg = obj->getCntrlName() + + " " +  "WD ON";
+	mqttLog(msg.c_str(), true, true);
 	
+	digitalWrite(relay_pin, LIGHTSON);
 }
 
 void app_WD_off(void  *cid)
 {
+	cntrlState *obj = (cntrlState *)cid;
+	String msg = obj->getCntrlName() + + " " +  "WD OFF";
+	mqttLog(msg.c_str(), true, true);
+	
 	digitalWrite(relay_pin, LIGHTSOFF);
 }
 
 void app_WE_on(void *cid)
 {
+	cntrlState *obj = (cntrlState *)cid;
+	String msg = obj->getCntrlName() + + " " +  "WE ON";
+	mqttLog(msg.c_str(), true, true);
+	
 	digitalWrite(relay_pin, LIGHTSON);
 }
 
 void app_WE_off(void *cid)
 {
+	cntrlState *obj = (cntrlState *)cid;
+	String msg = obj->getCntrlName() + + " " +  "WE OFF";
+	mqttLog(msg.c_str(), true, true);
+	
 	digitalWrite(relay_pin, LIGHTSOFF);	
 }
 void app_WD_auto(void *cid)
@@ -296,6 +311,7 @@ void app_WE_auto(void  *cid)
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + " WE AUTO";
 	mqttLog(msg.c_str(), true, true);
+	
 	//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
 	mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 1, true, "SET");
 }
@@ -316,7 +332,13 @@ void telnet_extension_1(char c)
 // Process any application specific telnet commannds
 void telnet_extension_2(char c)
 {
-	printTelnet((String)c);
+	char logString[51];
+	memset(logString, 0, sizeof logString);
+	sprintf(logString,
+				"\r%s%i\n",
+				"Switch State\t", digitalRead(relay_pin));
+
+	printTelnet((String)logString);
 }
 
 // Process any application specific telnet commannds
