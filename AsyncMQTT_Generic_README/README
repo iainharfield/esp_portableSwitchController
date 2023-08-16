@@ -1,8 +1,0 @@
-To avoid compilation errors for different board types
-
-To compile on ESP8266 D1 Mini I have to manually edit the AsyncMQTT_Generic library.json file so
-that the dependency files are the ones compatible with my board.
-
-When installing the AsyncMQTT_Generic replace the library.son file with this one.
-
-I dont really understand why I have to do this.
