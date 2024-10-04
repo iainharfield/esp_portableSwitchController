@@ -1,15 +1,14 @@
-
-//#include <Arduino.h>
-#include <ESP8266WiFi.h>
 #include <ArduinoOTA.h>
 #include <Ticker.h>
+#include <AsyncMqttClient.h> 
 #include <time.h>
 
-#include "defines.h"
-#include "utilities.h"
-#include "cntrl2.h"
+#include "hh_defines.h"
+#include "hh_utilities.h"
+#include "hh_cntrl.h"
 
-#include <AsyncMqttClient_Generic.hpp>
+// Folling line added to stop compilation error suddenly occuring in 2024???
+#include "ESPAsyncDNSServer.h"
 
 #define ESP8266_DRD_USE_RTC true
 #define ESP_DRD_USE_LITTLEFS false
@@ -18,30 +17,21 @@
 #define DOUBLERESETDETECTOR_DEBUG true
 #include <ESP_DoubleResetDetector.h>
 
-
-
-
 //***********************
 // Template functions
 //***********************
 bool onMqttMessageAppExt(char *, char *, const AsyncMqttClientMessageProperties &, const size_t &, const size_t &, const size_t &);
-bool onMqttMessageCntrlExt(char *, char *, const AsyncMqttClientMessageProperties &, const size_t &, const size_t &, const size_t &);
+bool onMqttMessageAppCntrlExt(char *, char *, const AsyncMqttClientMessageProperties &, const size_t &, const size_t &, const size_t &);
 void appMQTTTopicSubscribe();
 void telnet_extension_1(char);
 void telnet_extension_2(char);
 void telnet_extensionHelp(char);
-void startTimesReceivedChecker(); 
+void startTimesReceivedChecker();
 void processCntrlTOD_Ext();
-// void app_WD_on(void *);
-// void app_WE_off(cntrlState &);
-// void app_WD_on(cntrlState &);
-// void app_WE_off(cntrlState &);
-// void app_WD_auto(cntrlState &);
-// void app_WE_auto(cntrlState &);
 
-//*************************************
+//******************************
 // defined in asyncConnect.cpp
-//*************************************
+//******************************
 extern void mqttTopicsubscribe(const char *topic, int qos);
 extern void platform_setup(bool);
 extern void handleTelnet();
@@ -54,6 +44,7 @@ extern char ntptod[MAX_CFGSTR_LENGTH];
 //*************************************
 // defined in cntrl.cpp
 //*************************************
+extern cntrlState *cntrlObjRef; // pointer to cntrlState
 cntrlState controllerState;		// Create and set defaults
 
 
@@ -107,7 +98,6 @@ devConfig espDevice;
 Ticker configurationTimesReceived;
 bool timesReceived;
 
-
 void setup()
 {
     //***************************************************
@@ -132,7 +122,6 @@ void setup()
 	// configure the MQTT topics for the Controller
 	controllerState.setCntrlName((String) app_id + "01");
 	controllerState.setRefreshID(RefreshID);
-
 	controllerState.setCntrlObjRef(controllerState);
 
     // Platform setup: Set up and manage: WiFi, MQTT and Telnet
@@ -167,7 +156,7 @@ void loop()
 		bManMode = true;
                 memset(logString, 0, sizeof logString);
 		        sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "PCS Manually Held ON");
-		        mqttLog(logString, true, true);
+				mqttLog(logString, REPORT_WARN, true, true);
 
 				app_WD_on(&controllerState);  // FIXTHIS WD or WE
                 mqttClient.publish(oh3StateManual, 1, true, "MAN");
@@ -197,10 +186,7 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
     mqtt_payload[len] = '\0';
     strncpy(mqtt_payload, payload, len);
 
-    if (reporting == REPORT_DEBUG)
-	{
-        mqttLog(mqtt_payload, true, true);
-    }
+	mqttLog(mqtt_payload, REPORT_DEBUG, true, true);
 
 	if (strcmp(topic, oh3CommandTrigger) == 0)
 	{
@@ -229,16 +215,14 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 
 void processAppTOD_Ext()
 {
-	mqttLog("PSC01 Application Processing TOD", true, true);
-
+	mqttLog("PSC01 Application Processing TOD", REPORT_INFO, true, true);
 }
 
 bool processCntrlMessageApp_Ext(char *mqttMessage, const char *onMessage, const char *offMessage, const char *commandTopic)
 {
-	
 	if (strcmp(mqttMessage, "SET") == 0)
 	{
-		mqttClient.publish(oh3StateManual,1, true, "AUTO");			// This just sets the UI to show that MAN start is OFF
+		mqttClient.publish(oh3StateManual, 1, true, "AUTO"); // This just sets the UI to show that MAN start is OFF
 		return true;
 	}
 	return false;
@@ -265,7 +249,7 @@ void app_WD_on(void *cid)
 {
     cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + + " " +  "WD ON";
-	mqttLog(msg.c_str(), true, true);
+	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
 	digitalWrite(relay_pin, LIGHTSON);
 }
@@ -274,7 +258,7 @@ void app_WD_off(void  *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + + " " +  "WD OFF";
-	mqttLog(msg.c_str(), true, true);
+	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
 	digitalWrite(relay_pin, LIGHTSOFF);
 }
@@ -283,7 +267,7 @@ void app_WE_on(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + + " " +  "WE ON";
-	mqttLog(msg.c_str(), true, true);
+	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
 	digitalWrite(relay_pin, LIGHTSON);
 }
@@ -292,7 +276,7 @@ void app_WE_off(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + + " " +  "WE OFF";
-	mqttLog(msg.c_str(), true, true);
+	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
 	digitalWrite(relay_pin, LIGHTSOFF);	
 }
@@ -300,7 +284,7 @@ void app_WD_auto(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + " WD AUTO";
-	mqttLog(msg.c_str(), true, true);
+	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 							
 	//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
 	mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 1, true, "SET"); //
@@ -310,7 +294,7 @@ void app_WE_auto(void  *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + " WE AUTO";
-	mqttLog(msg.c_str(), true, true);
+	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
 	//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
 	mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 1, true, "SET");
@@ -347,7 +331,7 @@ void telnet_extensionHelp(char c)
 	printTelnet((String) "x\t\tSome description");
 }
 
-bool onMqttMessageCntrlExt(char *topic, char *payload, const AsyncMqttClientMessageProperties &properties, const size_t &len, const size_t &index, const size_t &total)
+bool onMqttMessageAppCntrlExt(char *topic, char *payload, const AsyncMqttClientMessageProperties &properties, const size_t &len, const size_t &index, const size_t &total)
 {
 	return controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
 }
