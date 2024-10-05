@@ -48,12 +48,12 @@ extern cntrlState *cntrlObjRef; // pointer to cntrlState
 cntrlState controllerState;		// Create and set defaults
 
 
-#define WDCntlTimes  	"/house/cntrl/portable-switch/wd-control-times" // Times received from either UI or Python app
-#define WECntlTimes  	"/house/cntrl/portable-switch/we-control-times" // Times received from either UI or MySQL via Python app
-#define runtimeState    "/house/cntrl/portable-switch/runtime-state" 	 // published state: ON, OFF, and AUTO
-#define WDUICmdState 	"/house/cntrl/portable-switch/wd-command"		 // UI Button press received
-#define WEUICmdState 	"/house/cntrl/portable-switch/we-command"		 // UI Button press received
-#define RefreshID		"PS01"												 // the key send to Python app to refresh Cntroler state	
+#define WDCntlTimes  	"/house/cntrl/portable-switch/wd-control-times" 		// Times received from either UI or Python app
+#define WECntlTimes  	"/house/cntrl/portable-switch/we-control-times" 		// Times received from either UI or MySQL via Python app
+#define runtimeState    "/house/cntrl/portable-switch/runtime-state" 	 		// published state: ON, OFF, and AUTO
+#define WDUICmdState 	"/house/cntrl/portable-switch/wd-command"		 		// UI Button press received
+#define WEUICmdState 	"/house/cntrl/portable-switch/we-command"		 		// UI Button press received
+#define RefreshID		"PS01"												 	// the key send to Python app to refresh Cntroler state	
 
 #define DRD_TIMEOUT 3
 #define DRD_ADDRESS 0
@@ -69,9 +69,9 @@ extern bool telnetReporting;
 // Application specific 
 //
 
-String deviceName      	= "portable-switch";
-String deviceType      	= "CNTRL";
-String app_id			= "PSC";	// configure
+String deviceName   = "portable-switch";
+String deviceType   = "CNTRL";
+String app_id		= "PSC";		// configure
 
 int relay_pin 		= D1;			// wemos D1. LIght on or off (Garden lights)
 int relay_pin_pir   = D2;	        // wemos D2. LIght on or off (Garage Path)
@@ -80,11 +80,10 @@ int LIGHTSON        = 1;
 int LIGHTSOFF       = 0;
 int LIGHTSAUTO      = 3;			// Not using this at the moment
 
-bool bManMode       = false; // true = Manual, false = automatic
+bool bManMode       = false; 		// true = Manual, false = automatic
 
 const char *oh3CommandTrigger   = "/house/cntrl/outside-lights-front/pir-command";	    // Event fron the PIR detector (front porch: PIRON or PIROFF
 const char *oh3StateManual		= "/house/cntrl/portable-switch/manual-state";	 // 	Status of the Manual control switch control MAN or AUTO
-
 
 //************************
 // Application specific
@@ -93,7 +92,6 @@ bool processCntrlMessageApp_Ext(char *, const char *, const char *, const char *
 void processAppTOD_Ext();
 
 devConfig espDevice;
-//runState cntrlState;
 
 Ticker configurationTimesReceived;
 bool timesReceived;
@@ -164,14 +162,9 @@ void loop()
 	else
 	{
 		bManMode = false;
-				// client.publish(outTopicOLFManual, "AUTO");
-			//	if (TODReceived == true)
-			//		processState();
+		// mqttClient.publish(oh3StateManual, 1, true, "AUTO"); //FIXTHIS  I thing we cant assume auto - need to get state prior
 	}
 }
-
-
-
 
 //****************************************************************
 // Process any application specific inbound MQTT messages
@@ -193,23 +186,20 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 		if (strcmp(mqtt_payload, "PIRON") == 0)
 		{
 			digitalWrite(relay_pin_pir, LIGHTSON);	
-			controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
+			controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
             return true;
 		}
 
 		if (strcmp(mqtt_payload, "PIROFF") == 0)
 		{
-			//if (cntrlStateWD.getRunMode() != ONMODE && cntrlStateWE.getRunMode() != ONMODE)
-			//{
-				// Switch off unless manually held on by switch
-				if (bManMode != true)
+			if (bManMode != true)
 					digitalWrite(relay_pin_pir, LIGHTSOFF);	
-			//}
-			controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
+
+			controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
             return true;
 		}
     }    
-	controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
+	controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
     return false;
 }
 
