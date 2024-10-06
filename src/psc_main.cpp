@@ -64,7 +64,6 @@ DoubleResetDetector *drd;
 extern int reporting;
 extern bool telnetReporting;
 
-
 //
 // Application specific 
 //
@@ -153,7 +152,7 @@ void loop()
 	{
 		bManMode = true;
                 memset(logString, 0, sizeof logString);
-		        sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "PCS Manually Held ON");
+		        sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "PSC Manually Held ON");
 				mqttLog(logString, REPORT_WARN, true, true);
 
 				app_WD_on(&controllerState);  // FIXTHIS WD or WE
