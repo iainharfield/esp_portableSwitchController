@@ -51,6 +51,7 @@ cntrlState controllerState;		// Create and set defaults
 #define WDCntlTimes  	"/house/cntrl/portable-switch/wd-control-times" 		// Times received from either UI or Python app
 #define WECntlTimes  	"/house/cntrl/portable-switch/we-control-times" 		// Times received from either UI or MySQL via Python app
 #define runtimeState    "/house/cntrl/portable-switch/runtime-state" 	 		// published state: ON, OFF, and AUTO
+#define LightState      "/house/cntrl/portable-switch/light-state"          // ON or OFF
 #define WDUICmdState 	"/house/cntrl/portable-switch/wd-command"		 		// UI Button press received
 #define WEUICmdState 	"/house/cntrl/portable-switch/we-command"		 		// UI Button press received
 #define RefreshID		"PS01"												 	// the key send to Python app to refresh Cntroler state	
@@ -241,6 +242,10 @@ void app_WD_on(void *cid)
 	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
 	digitalWrite(relay_pin, LIGHTSON);
+	controllerState.setOutputState(1);
+
+	mqttClient.publish(LightState, 0, true, "ON");		// QoS = 0
+
 }
 
 void app_WD_off(void  *cid)
@@ -250,6 +255,10 @@ void app_WD_off(void  *cid)
 	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
 	digitalWrite(relay_pin, LIGHTSOFF);
+	controllerState.setOutputState(0);
+
+	mqttClient.publish(LightState, 0, true, "ON");		// QoS = 0
+
 }
 
 void app_WE_on(void *cid)
@@ -259,6 +268,10 @@ void app_WE_on(void *cid)
 	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
 	digitalWrite(relay_pin, LIGHTSON);
+	controllerState.setOutputState(1);
+
+	mqttClient.publish(LightState, 0, true, "ON");		// QoS = 0
+
 }
 
 void app_WE_off(void *cid)
@@ -268,6 +281,9 @@ void app_WE_off(void *cid)
 	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
 	digitalWrite(relay_pin, LIGHTSOFF);	
+	controllerState.setOutputState(0);
+
+	mqttClient.publish(LightState, 0, true, "ON");		// QoS = 0
 }
 void app_WD_auto(void *cid)
 {
