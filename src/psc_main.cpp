@@ -257,7 +257,7 @@ void app_WD_off(void  *cid)
 	digitalWrite(relay_pin, LIGHTSOFF);
 	controllerState.setOutputState(0);
 
-	mqttClient.publish(LightState, 0, true, "ON");		// QoS = 0
+	mqttClient.publish(LightState, 0, true, "OFF");		// QoS = 0
 
 }
 
