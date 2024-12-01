@@ -51,7 +51,7 @@ cntrlState controllerState;		// Create and set defaults
 #define WDCntlTimes  	"/house/cntrl/portable-switch/wd-control-times" 		// Times received from either UI or Python app
 #define WECntlTimes  	"/house/cntrl/portable-switch/we-control-times" 		// Times received from either UI or MySQL via Python app
 #define runtimeState    "/house/cntrl/portable-switch/runtime-state" 	 		// published state: ON, OFF, and AUTO
-#define LightState      "/house/cntrl/portable-switch/light-state"          // ON or OFF
+#define LightState      "/house/cntrl/portable-switch/light-state"              // ON or OFF
 #define WDUICmdState 	"/house/cntrl/portable-switch/wd-command"		 		// UI Button press received
 #define WEUICmdState 	"/house/cntrl/portable-switch/we-command"		 		// UI Button press received
 #define RefreshID		"PS01"												 	// the key send to Python app to refresh Cntroler state	
@@ -186,7 +186,7 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 		if (strcmp(mqtt_payload, "PIRON") == 0)
 		{
 			digitalWrite(relay_pin_pir, LIGHTSON);	
-			controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
+			//controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
             return true;
 		}
 
@@ -195,11 +195,11 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 			if (bManMode != true)
 					digitalWrite(relay_pin_pir, LIGHTSOFF);	
 
-			controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
+			//controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
             return true;
 		}
-    }    
-	controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
+    }   
+	//controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); 
     return false;
 }
 
@@ -239,70 +239,87 @@ void app_WD_on(void *cid)
 {
     cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + + " " +  "WD ON";
-	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
-	digitalWrite(relay_pin, LIGHTSON);
-	controllerState.setOutputState(1);
+	if (coreServices.getWeekDayState() == 1)			// 1 means weekday
+	{
+		digitalWrite(relay_pin, LIGHTSON);
+		controllerState.setOutputState(1);  // Feedback to the Controller the output of the requested action
 
-	mqttClient.publish(LightState, 0, true, "ON");		// QoS = 0
-
+		mqttLog(msg.c_str(), REPORT_INFO, true, true);
+		mqttClient.publish(LightState, 0, false, "ON");		// QoS = 0
+	}	
 }
 
 void app_WD_off(void  *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + + " " +  "WD OFF";
-	mqttLog(msg.c_str(), REPORT_INFO, true, true);
-	
-	digitalWrite(relay_pin, LIGHTSOFF);
-	controllerState.setOutputState(0);
 
-	mqttClient.publish(LightState, 0, true, "OFF");		// QoS = 0
-
+	if (coreServices.getWeekDayState() == 1)			// 1 means weekday
+	{
+		digitalWrite(relay_pin, LIGHTSOFF);
+		controllerState.setOutputState(0); // Feedback to the Controller the output of the requested action
+        
+		mqttLog(msg.c_str(), REPORT_INFO, true, true);
+		mqttClient.publish(LightState, 0, false, "OFF");		// QoS = 0
+	}	
 }
 
 void app_WE_on(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + + " " +  "WE ON";
-	mqttLog(msg.c_str(), REPORT_INFO, true, true);
-	
-	digitalWrite(relay_pin, LIGHTSON);
-	controllerState.setOutputState(1);
 
-	mqttClient.publish(LightState, 0, true, "ON");		// QoS = 0
+	if (coreServices.getWeekDayState() == 0)			// 0 means weekend
+	{
+		digitalWrite(relay_pin, LIGHTSON);
+		controllerState.setOutputState(1); // 1=ON, Feedback to the Controller the output of the requested action
 
+		mqttLog(msg.c_str(), REPORT_INFO, true, true);
+		mqttClient.publish(LightState, 0, false, "ON");		// QoS = 0
+	}
 }
 
 void app_WE_off(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + + " " +  "WE OFF";
-	mqttLog(msg.c_str(), REPORT_INFO, true, true);
-	
-	digitalWrite(relay_pin, LIGHTSOFF);	
-	controllerState.setOutputState(0);
 
-	mqttClient.publish(LightState, 0, true, "OFF");		// QoS = 0
+	if (coreServices.getWeekDayState() == 0)			// 0 means weekend
+	{
+		digitalWrite(relay_pin, LIGHTSOFF);	
+		controllerState.setOutputState(0); // 0=OFF, Feedback to the Controller the output of the requested action
+
+		mqttLog(msg.c_str(), REPORT_INFO, true, true);
+		mqttClient.publish(LightState, 0, false, "OFF");		// QoS = 0
+	}
 }
 void app_WD_auto(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + " WD AUTO";
-	mqttLog(msg.c_str(), REPORT_INFO, true, true);
+
+	if (coreServices.getWeekDayState() == 1)			// 1 means weekday
+	{
+		mqttLog(msg.c_str(), REPORT_INFO, true, true);
 							
-	//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
-	mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 1, true, "SET"); //
+		//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
+		mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 0, false, "SET"); //
+	}
 }
 
 void app_WE_auto(void  *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + " WE AUTO";
-	mqttLog(msg.c_str(), REPORT_INFO, true, true);
+
+	if (coreServices.getWeekDayState() == 0)			// 0 means weekend
+	{
+		mqttLog(msg.c_str(), REPORT_INFO, true, true);
 	
-	//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
-	mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 1, true, "SET");
+		//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
+		mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 0, false, "SET");
+	}
 }
 
 void startTimesReceivedChecker()
