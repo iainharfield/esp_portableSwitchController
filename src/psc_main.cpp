@@ -159,7 +159,7 @@ void loop()
 				mqttLog(logString, REPORT_WARN, true, true);
 
 				app_WD_on(&controllerState);  // FIXTHIS WD or WE
-                mqttClient.publish(oh3StateManual, 1, true, "MAN");
+                mqttClient.publish(oh3StateManual, 0, true, "MAN");
 	}
 	else
 	{
@@ -187,15 +187,19 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 	{
 		if (strcmp(mqtt_payload, "PIRON") == 0)
 		{
-			digitalWrite(relay_pin_pir, LIGHTSON);	
+			mqttLog("PIRON Detected", REPORT_INFO, true, true);
+			digitalWrite(relay_pin_pir, LIGHTSON);
+			digitalWrite(relay_pin, LIGHTSON);
 			//controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
             return true;
 		}
 
 		if (strcmp(mqtt_payload, "PIROFF") == 0)
 		{
+			mqttLog("PIROFF Detected", REPORT_INFO, true, true);
 			if (bManMode != true)
-					digitalWrite(relay_pin_pir, LIGHTSOFF);	
+				digitalWrite(relay_pin_pir, LIGHTSOFF);
+				digitalWrite(relay_pin, LIGHTSOFF);
 
 			//controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
             return true;
@@ -214,7 +218,7 @@ bool processCntrlMessageApp_Ext(char *mqttMessage, const char *onMessage, const 
 {
 	if (strcmp(mqttMessage, "SET") == 0)
 	{
-		mqttClient.publish(oh3StateManual, 1, true, "AUTO"); // This just sets the UI to show that MAN start is OFF
+		mqttClient.publish(oh3StateManual, 0, true, "AUTO"); // This just sets the UI to show that MAN start is OFF
 		return true;
 	}
 	return false;
@@ -237,6 +241,9 @@ void appMQTTTopicSubscribe()
 	controllerState.setWECntrlRunTimesStateTopic(runtimeState);
 }
 
+//**********************************************
+// Controller Notification : Weekday ON
+//**********************************************
 void app_WD_on(void *cid)
 {
     cntrlState *obj = (cntrlState *)cid;
@@ -252,6 +259,9 @@ void app_WD_on(void *cid)
 	}	
 }
 
+//**********************************************
+// Controller Notification : Weekday OFF
+//**********************************************
 void app_WD_off(void  *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
@@ -267,6 +277,9 @@ void app_WD_off(void  *cid)
 	}	
 }
 
+//**********************************************
+// Controller Notification : Weekend ON
+//**********************************************
 void app_WE_on(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
@@ -282,6 +295,9 @@ void app_WE_on(void *cid)
 	}
 }
 
+//**********************************************
+// Controller Notification : Weekend OFF
+//**********************************************
 void app_WE_off(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
@@ -296,6 +312,10 @@ void app_WE_off(void *cid)
 		mqttClient.publish(LightState, 0, false, "OFF");		// QoS = 0
 	}
 }
+
+//**********************************************
+// Controller Notification : Weekday AUTO
+//**********************************************
 void app_WD_auto(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
@@ -309,7 +329,9 @@ void app_WD_auto(void *cid)
 		mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 0, false, "SET"); //
 	}
 }
-
+//**********************************************
+// Controller Notification : Weekend AUTO
+//**********************************************
 void app_WE_auto(void  *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
