@@ -120,7 +120,7 @@ void setup()
 
 	// this app is a contoller
 	// configure the MQTT topics for the Controller
-	controllerState.setCntrlName((String) app_id + "01");
+	controllerState.setCntrlName((String) app_id); // + "01");
 	controllerState.setRefreshID(RefreshID);
 	controllerState.setCntrlObjRef(controllerState);
 
@@ -194,6 +194,8 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
             return true;
 		}
 
+		// if PIROFF ignored let normal TOD processing reset state.  Mmmm not sure this is good - depends when TOD arrives??? means that the lights might be on for 1 or 59s
+		/*	
 		if (strcmp(mqtt_payload, "PIROFF") == 0)
 		{
 			mqttLog("PIROFF Detected", REPORT_INFO, true, true);
@@ -204,6 +206,7 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 			//controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); // FIXTHIS what is this for
             return true;
 		}
+		*/
     }   
 	//controllerState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); 
     return false;
@@ -211,7 +214,8 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 
 void processAppTOD_Ext()
 {
-	mqttLog("PSC01 Application Processing TOD", REPORT_INFO, true, true);
+	String msg = app_id + " Application Processing TOD";
+	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 }
 
 bool processCntrlMessageApp_Ext(char *mqttMessage, const char *onMessage, const char *offMessage, const char *commandTopic)
